@@ -1,13 +1,14 @@
-import { useContext, useEffect } from 'react'
-import { CountDownContainer, Separator } from './styles'
-import { CyclesContext } from '../..'
 import { differenceInSeconds } from 'date-fns'
+import { useContext, useEffect } from 'react'
+import { CyclesContext } from '../../../../contexts/CyclesContext'
+import { CountDownContainer, Separator } from './styles'
 
 export function Countdown() {
   const {
     activeCycle,
+    activeCycleId,
     markCurrentCycleAsFinished,
-    amountSecondPassed,
+    amountSecondsPassed,
     setSecondsPassed,
   } = useContext(CyclesContext)
 
@@ -15,15 +16,17 @@ export function Countdown() {
 
   useEffect(() => {
     let interval: number
+
     if (activeCycle) {
       interval = setInterval(() => {
         const secondsDifference = differenceInSeconds(
           new Date(),
-          activeCycle.startDate,
+          new Date(activeCycle.startDate),
         )
 
         if (secondsDifference >= totalSeconds) {
           markCurrentCycleAsFinished()
+
           setSecondsPassed(totalSeconds)
           clearInterval(interval)
         } else {
@@ -35,19 +38,25 @@ export function Countdown() {
     return () => {
       clearInterval(interval)
     }
-  })
+  }, [
+    activeCycle,
+    totalSeconds,
+    activeCycleId,
+    setSecondsPassed,
+    markCurrentCycleAsFinished,
+  ])
 
-  const currentSeconds = activeCycle ? totalSeconds - amountSecondPassed : 0
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
 
-  const minuteAmount = Math.floor(currentSeconds / 60)
+  const minutesAmount = Math.floor(currentSeconds / 60)
   const secondsAmount = currentSeconds % 60
 
+  const minutes = String(minutesAmount).padStart(2, '0')
   const seconds = String(secondsAmount).padStart(2, '0')
-  const minutes = String(minuteAmount).padStart(2, '0')
 
   useEffect(() => {
     if (activeCycle) {
-      document.title = `${minutes} : ${seconds}`
+      document.title = `${minutes}:${seconds}`
     }
   }, [minutes, seconds, activeCycle])
 
